@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Dernek Bildirim</title>
+</head>
+<body>
+  <h2>Bildirim İzni ve Token Al</h2>
+  <button onclick="iste()">İzin Al & Token Gönder</button>
+
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-messaging.js"></script>
+
+  <script>
+    // Firebase projenin yapılandırması – Firebase Console'dan al
+    const firebaseConfig = {
+      apiKey: "SENIN_API_KEY",
+      authDomain: "proje-ismi.firebaseapp.com",
+      projectId: "proje-ismi",
+      messagingSenderId: "SENIN_SENDER_ID",
+      appId: "SENIN_APP_ID"
+    };
+
+    const app = firebase.initializeApp(firebaseConfig);
+    const messaging = firebase.messaging();
+
+    async function iste() {
+      try {
+        await Notification.requestPermission();
+        const token = await messaging.getToken({
+          vapidKey: 'SENIN_VAPID_KEY' // Firebase Console > Project Settings > Cloud Messaging
+        });
+
+        console.log("Token alındı:", token);
+
+        await fetch("http://localhost:3000/token-ekle", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token })
+        });
+
+        alert("Token başarıyla gönderildi!");
+      } catch (err) {
+        console.error("Token alınamadı:", err);
+      }
+    }
+
+    // Servis worker'ı kayıt et
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('firebase-messaging-sw.js')
+        .then(reg => console.log("Service Worker kaydedildi", reg))
+        .catch(err => console.error("Service Worker hatası", err));
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bildirim Gönder</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Bildirim Gönder</h1>
+    <form id="bildirim-form">
+      <label for="baslik">Başlık</label>
+      <input type="text" id="baslik" name="baslik" required>
+      
+      <label for="icerik">İçerik</label>
+      <textarea id="icerik" name="icerik" required></textarea>
+      
+      <button type="submit">Gönder</button>
+    </form>
+
+    <p id="sonuc"></p>
+
+    <h2>Gönderilen Bildirimler</h2>
+    <div id="bildirim-listesi"></div>
+  </div>
+
+  <script>
+    // Bildirim gönderme formu
+    document.getElementById('bildirim-form').addEventListener('submit', function(event) {
+      event.preventDefault();
+      
+      const baslik = document.getElementById('baslik').value;
+      const icerik = document.getElementById('icerik').value;
+
+      const token = localStorage.getItem('token'); // Token'ı localStorage'dan alıyoruz
+
+      fetch('http://localhost:3000/bildirim-gonder', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ baslik, icerik })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          document.getElementById('sonuc').innerText = 'Bildirim başarıyla gönderildi!';
+          loadBildirimler();  // Bildirim gönderildikten sonra listeyi yenileyelim
+        } else {
+          document.getElementById('sonuc').innerText = `Hata: ${data.message}`;
+        }
+      })
+      .catch(error => {
+        console.error('Hata:', error);
+        document.getElementById('sonuc').innerText = 'Bir hata oluştu!';
+      });
+    });
+
+    // Bildirimleri yükle
+    function loadBildirimler() {
+      const token = localStorage.getItem('token');
+
+      fetch('http://localhost:3000/bildirimler', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          const bildirimlerDiv = document.getElementById('bildirim-listesi');
+          bildirimlerDiv.innerHTML = ''; // Mevcut listeyi temizle
+
+          data.bildirimler.forEach(bildirim => {
+            const div = document.createElement('div');
+            div.classList.add('bildirim');
+            div.innerHTML = `
+              <h3>${bildirim.baslik}</h3>
+              <p>${bildirim.icerik}</p>
+              <small>${new Date(bildirim.tarih).toLocaleString()}</small>
+            `;
+            bildirimlerDiv.appendChild(div);
+          });
+        } else {
+          document.getElementById('bildirim-listesi').innerHTML = 'Bildirimler yüklenemedi.';
+        }
+      })
+      .catch(error => {
+        console.error('Hata:', error);
+        document.getElementById('bildirim-listesi').innerHTML = 'Bir hata oluştu.';
+      });
+    }
+
+    // Sayfa yüklendiğinde bildirimleri yükle
+    window.onload = loadBildirimler;
+  </script>
+</body>
+</html>

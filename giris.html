@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Giriş</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f4f4f4;
+      display: flex;
+      height: 100vh;
+      justify-content: center;
+      align-items: center;
+    }
+    .panel {
+      background: white;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      width: 300px;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+    }
+    button {
+      padding: 10px;
+      width: 100%;
+      background: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    .hata {
+      color: red;
+      margin-top: 10px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="panel">
+    <h2>Admin Girişi</h2>
+    <input type="text" id="username" placeholder="Kullanıcı Adı" />
+    <input type="password" id="password" placeholder="Şifre" />
+    <button onclick="girisYap()">Giriş Yap</button>
+    <div class="hata" id="hata"></div>
+  </div>
+
+  <script>
+    async function girisYap() {
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      const hata = document.getElementById('hata');
+
+      try {
+        const response = await fetch('http://localhost:3000/giris', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          localStorage.setItem('token', data.token);
+          window.location.href = 'bildirim.html';
+        } else {
+          hata.textContent = data.message || "Giriş başarısız.";
+        }
+      } catch (err) {
+        hata.textContent = "Sunucuya ulaşılamadı.";
+      }
+    }
+  </script>
+</body>
+</html>
